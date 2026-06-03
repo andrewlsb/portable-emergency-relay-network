@@ -8,4 +8,4 @@ Libraries needed:
 - Adafruit GFX
 
 Expected output:
-Hello Andrew
+Hello
