@@ -6,7 +6,8 @@ A battery-powered embedded communication system designed to provide GPS location
 
 -Milestone 1 Complete
 -Milestone 2 Complete
--Current Task: Milestone 3 (GPS + OLED Integration)
+-Milestone 3 Complete
+Current Milestone 4
 
 ## Progress
 
@@ -14,7 +15,7 @@ A battery-powered embedded communication system designed to provide GPS location
 - [x] UART communication verified
 - [x] GPS fix acquired (6 satellites)
 - [x] OLED display integration
-- [ ] GPS coordinates on OLED
+- [x] GPS coordinates on OLED
 - [ ] LoRa communication
 - [ ] Multi-hop relay network
 - [ ] Battery-powered deployment
@@ -25,7 +26,7 @@ Build a portable emergency communication system using an Arduino UNO R4 WiFi, GP
 
 ## Current Milestone
 
-Milestone 3: GPS + OLED Integration
+Current Task: Milestone 4 (LoRa Communication)
 
 ## Planned Features
 
@@ -104,3 +105,26 @@ HELLO
 ### Evidence
 
 ![OLED Test](images/milestone2_oled_hello.png)
+
+## Milestone 3 - GPS and OLED Integration
+
+### Objective
+Integrate the NEO-6M GPS module and SSD1306 OLED display into a standalone embedded system.
+
+### Results
+- GPS data successfully displayed on OLED screen
+- Real-time latitude and longitude updates verified
+- Satellite count displayed on OLED
+- GPS fix status displayed on OLED
+- Standalone operation achieved without Serial Monitor
+
+### Example Output
+GPS STATUS
+SAT: 6
+FIX: YES
+LAT: 47.xxxxxx
+LON: -122.xxxxxx
+
+### Evidence
+
+![GPS OLED](images/milestone3_gps_oled.png)
