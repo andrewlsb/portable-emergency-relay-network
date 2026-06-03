@@ -4,9 +4,9 @@ A battery-powered embedded communication system designed to provide GPS location
 
 ## Status
 
-Milestone 1 Complete
-Milestone 2 Complete
-Current Task: Milestone 3 (GPS + OLED Integration)
+-Milestone 1 Complete
+-Milestone 2 Complete
+-Current Task: Milestone 3 (GPS + OLED Integration)
 
 ## Progress
 
@@ -102,3 +102,5 @@ Integrate the SSD1306 OLED display with the Arduino UNO R4 WiFi and verify displ
 HELLO
 
 ### Evidence
+
+![OLED Test](images/milestone2_oled_hello.heic)
