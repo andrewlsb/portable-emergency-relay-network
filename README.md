@@ -84,3 +84,28 @@ Satellites: 6
 ### Evidence
 
 ![GPS Fix](images/milestone1_gps_fix.png)
+
+# OLED Test
+
+## Objective
+
+Verify SSD1306 OLED communication using I2C.
+
+## Hardware
+
+- Arduino UNO R4 WiFi
+- SSD1306 OLED Display
+
+## Wiring
+
+OLED GND -> Arduino GND
+OLED VCC -> Arduino 5V
+OLED SDA -> Arduino SDA
+OLED SCL -> Arduino SCL
+
+## Results
+
+Successfully displayed text on OLED display using I2C communication.
+
+Output:
+HELLO
