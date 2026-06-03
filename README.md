@@ -12,7 +12,7 @@ Current Task: Milestone 2 (OLED Display Integration)
 - [x] GPS module integration
 - [x] UART communication verified
 - [x] GPS fix acquired (6 satellites)
-- [ ] OLED display integration
+- [x] OLED display integration
 - [ ] GPS coordinates on OLED
 - [ ] LoRa communication
 - [ ] Multi-hop relay network
