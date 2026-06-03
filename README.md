@@ -4,7 +4,19 @@ A battery-powered embedded communication system designed to provide GPS location
 
 ## Status
 
-Planning Phase / Milestone 1 Preparation
+Milestone 1 Complete
+Current Task: Milestone 2 (OLED Display Integration)
+
+## Progress
+
+- [x] GPS module integration
+- [x] UART communication verified
+- [x] GPS fix acquired (6 satellites)
+- [ ] OLED display integration
+- [ ] GPS coordinates on OLED
+- [ ] LoRa communication
+- [ ] Multi-hop relay network
+- [ ] Battery-powered deployment
 
 ## Project Goal
 
@@ -51,3 +63,24 @@ Future:
 4. LoRa message transmission
 5. Three-node relay network
 6. Battery-powered final prototype
+
+## Milestone 1 - GPS Integration
+
+### Objective
+Integrate the NEO-6M GPS module with the Arduino UNO R4 WiFi and verify location tracking.
+
+### Results
+- GPS communication established using UART
+- TinyGPSPlus successfully decoded NMEA messages
+- GPS fix acquired with 6 satellites
+- Real-time latitude and longitude displayed in Serial Monitor
+
+### Example Output
+
+Latitude: 47.667700
+Longitude: -122.313024
+Satellites: 6
+
+### Evidence
+
+![GPS Fix](images/milestone1_gps_fix.png)
