@@ -103,4 +103,4 @@ HELLO
 
 ### Evidence
 
-![OLED Test](images/milestone2_oled_hello.heic)
+![OLED Test](images/milestone2_oled_hello.HEIC)
