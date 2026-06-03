@@ -1,34 +1,45 @@
-# Wiring Notes
+# GPS + OLED Wiring
 
-## GPS Module to Arduino UNO R4 WiFi
+## Components
 
-GPS uses UART communication.
+- Arduino UNO R4 WiFi
+- NEO-6M GPS Module
+- SSD1306 0.96 inch I2C OLED Display
 
-| GPS Module | Arduino UNO R4 WiFi |
-|---|---|
-| VCC | 5V |
-| GND | GND |
-| TX | RX |
-| RX | TX |
+## GPS Connections
 
-Important:
-TX and RX are crossed:
-GPS TX goes to Arduino RX.
-GPS RX goes to Arduino TX.
+GPS VCC -> Arduino 5V
 
-## OLED Display to Arduino UNO R4 WiFi
+GPS GND -> Arduino GND
 
-OLED uses I2C communication.
+GPS TX -> Arduino RX (Pin 0)
 
-| OLED Display | Arduino UNO R4 WiFi |
-|---|---|
-| VCC | 5V |
-| GND | GND |
-| SDA | SDA |
-| SCL | SCL |
+GPS RX -> Arduino TX (Pin 1)
 
-## Debugging Order
+## OLED Connections
 
-1. Test GPS alone first.
-2. Test OLED alone second.
-3. Combine GPS and OLED only after both work separately.
+OLED VCC -> Arduino 5V
+
+OLED GND -> Arduino GND
+
+OLED SDA -> Arduino SDA
+
+OLED SCL -> Arduino SCL
+
+## Power Distribution
+
+Arduino 5V is connected to the breadboard power rail.
+
+GPS VCC and OLED VCC share the same 5V rail.
+
+Arduino GND is connected to the breadboard ground rail.
+
+GPS GND and OLED GND share the same ground rail.
+
+## System Architecture
+
+NEO-6M GPS
+    ↓ UART
+Arduino UNO R4 WiFi
+    ↓ I2C
+SSD1306 OLED Display
