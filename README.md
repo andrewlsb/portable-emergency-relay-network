@@ -5,7 +5,8 @@ A battery-powered embedded communication system designed to provide GPS location
 ## Status
 
 Milestone 1 Complete
-Current Task: Milestone 2 (OLED Display Integration)
+Milestone 2 Complete
+Current Task: Milestone 3 (GPS + OLED Integration)
 
 ## Progress
 
@@ -24,7 +25,7 @@ Build a portable emergency communication system using an Arduino UNO R4 WiFi, GP
 
 ## Current Milestone
 
-GPS → Arduino UNO R4 WiFi → OLED Display
+Milestone 3: GPS + OLED Integration
 
 ## Planned Features
 
@@ -85,3 +86,19 @@ Satellites: 6
 
 ![GPS Fix](images/milestone1_gps_fix.png)
 
+## Milestone 2 - OLED Display Integration
+
+### Objective
+Integrate the SSD1306 OLED display with the Arduino UNO R4 WiFi and verify display functionality.
+
+### Results
+- OLED display successfully initialized
+- I2C communication established using SDA and SCL
+- Text successfully displayed on OLED screen
+- Adafruit SSD1306 and GFX libraries integrated successfully
+
+### Example Output
+
+HELLO
+
+### Evidence
