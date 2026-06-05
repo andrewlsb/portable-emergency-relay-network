@@ -25,6 +25,11 @@ Current Milestone 4
 
 Build a portable emergency communication network capable of transmitting GPS coordinates and emergency SOS messages in environments without cellular or internet infrastructure. The system uses GPS-enabled field nodes, LoRa wireless communication, relay nodes, and a base station to deliver emergency location information over a multi-hop network.
 
+## Documentation
+
+- Project Plan: docs/project_plan.md
+- System Architecture: docs/system_architecture.md
+
 ## Current Milestone
 
 Current Task: Milestone 4 (LoRa Communication)
