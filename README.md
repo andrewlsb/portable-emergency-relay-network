@@ -133,6 +133,7 @@ LON: -122.xxxxxx
 
 ![GPS OLED](images/milestone3_gps_oled.png)
 
+
 ## Milestone 4 Preparation - LoRa Module Verification
 
 ### Objective
@@ -148,7 +149,15 @@ Integrate the RYLR998 LoRa module with the Arduino UNO R4 WiFi and verify UART c
 - Confirmed operation on the 915 MHz frequency band
 - Verified baud rate configuration
 
-### Example Output
+### Evidence
+
+#### LoRa Module Verification
+
+![LoRa Verification](images/milestone4_lora_setup.png)
+
+The RYLR998 LoRa module successfully responded to multiple AT commands. The module address, network ID, operating frequency, and baud rate were verified, confirming successful UART communication between the Arduino UNO R4 WiFi and the LoRa transceiver.
+
+Verified Output:
 
 +OK
 
@@ -160,10 +169,4 @@ Integrate the RYLR998 LoRa module with the Arduino UNO R4 WiFi and verify UART c
 
 +IPR=115200
 
-### Evidence
-
-#### LoRa Module Verification
-
-LoRa Verification
-
-The RYLR998 LoRa module successfully responded to AT commands and returned valid configuration information, confirming UART communication and proper module operation.
++PARAMETER=9,7,1,12
