@@ -23,7 +23,7 @@ Current Milestone 4
 
 ## Project Goal
 
-Build a portable emergency communication system using an Arduino UNO R4 WiFi, GPS module, OLED display, and future LoRa radio modules. The first milestone is to read live GPS coordinates and display them on an OLED screen.
+Build a portable emergency communication network capable of transmitting GPS coordinates and emergency SOS messages in environments without cellular or internet infrastructure. The system uses GPS-enabled field nodes, LoRa wireless communication, relay nodes, and a base station to deliver emergency location information over a multi-hop network.
 
 ## Current Milestone
 
@@ -36,23 +36,23 @@ Current Task: Milestone 4 (LoRa Communication)
 - Emergency SOS message generation
 - LoRa wireless communication
 - Multi-hop relay forwarding
-- Base station dashboard
+- PC-based base station dashboard
+- Battery-powered field operation
 
-## Hardware
+### Hardware
 
-Current:
+#### Current
 
-Arduino UNO R4 WiFi
-NEO-6M GPS Module
-SSD1306 0.96 inch I2C OLED Display
-RYLR998 LoRa Module
+- Arduino UNO R4 WiFi
+- STM32 Nucleo Development Board
+- NEO-6M GPS Module
+- SSD1306 0.96 inch I2C OLED Display
+- RYLR998 LoRa Modules (3)
 
-Future:
+#### Future
 
-Additional RYLR998 LoRa Modules
-STM32 Nucleo Development Board
-Battery packs
-Enclosures
+- Battery Packs
+- Enclosures
 
 ## Repository Structure
 
