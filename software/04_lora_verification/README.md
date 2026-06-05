@@ -48,4 +48,4 @@ Successfully established UART communication between the Arduino UNO R4 WiFi and 
 
 ## Evidence
 
-![LoRa Verification](images/milestone4_lora_verification.png)
+![LoRa Verification](images/milestone4_lora_setup.png)
