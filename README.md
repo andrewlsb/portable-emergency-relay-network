@@ -4,10 +4,10 @@ A battery-powered embedded communication system designed to provide GPS location
 
 ## Status
 
--Milestone 1 Complete
--Milestone 2 Complete
--Milestone 3 Complete
-Current Milestone 4
+- Milestone 1 Complete
+- Milestone 2 Complete
+- Milestone 3 Complete
+- Current Milestone: 4
 
 ## Progress
 
