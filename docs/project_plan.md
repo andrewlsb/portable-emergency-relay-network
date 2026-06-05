@@ -10,60 +10,85 @@ The purpose of this project is to design and build a portable embedded communica
 
 ## Phase 1: GPS to Arduino
 
-Goal:
+### Goal
+
 Read GPS coordinates from the NEO-6M GPS module and print them to the Arduino Serial Monitor.
 
-Success Criteria:
+### Success Criteria
+
 - Arduino receives GPS data
 - Latitude and longitude are printed
 - Satellite count is displayed
 
+---
+
 ## Phase 2: OLED Display
 
-Goal:
+### Goal
+
 Display basic text on the SSD1306 OLED display.
 
-Success Criteria:
+### Success Criteria
+
 - OLED turns on
 - OLED displays test message
 - Arduino communicates with OLED using I2C
 
+---
+
 ## Phase 3: GPS to OLED
 
-Goal:
+### Goal
+
 Display GPS coordinates directly on the OLED screen.
 
-Success Criteria:
+### Success Criteria
+
 - OLED displays latitude
 - OLED displays longitude
 - OLED displays satellite count or GPS fix status
 
+---
+
 ## Phase 4: LoRa Communication
 
-Goal:
-Transmit GPS data wirelessly between two nodes.
+### Goal
 
-Success Criteria:
-- Node A sends a packet
-- Node B receives the packet
-- Message is displayed on the receiver
+Transmit GPS and emergency status data wirelessly between a field unit and relay node.
+
+### Success Criteria
+
+- STM32 field unit sends a packet
+- Arduino UNO R4 relay node receives the packet
+- GPS data and status information are successfully transmitted over LoRa
+
+---
 
 ## Phase 5: Relay Network
 
-Goal:
-Add a third node that forwards packets between the field unit and base station.
+### Goal
 
-Success Criteria:
-- Relay node receives and forwards packets
+Forward packets from the field unit through the relay node to a PC-based base station.
+
+### Success Criteria
+
+- Relay node receives packets from the field unit
+- Relay node forwards packets to the base station
 - Base station receives packets through the relay
 - Duplicate packets are filtered
 
+---
+
 ## Phase 6: Final Prototype
 
-Goal:
+### Goal
+
 Build a battery-powered version with enclosure and documentation.
 
-Success Criteria:
+### Success Criteria
+
 - System operates portably
 - Wiring is organized
 - GitHub repository includes code, photos, and documentation
+- SOS messages include GPS coordinates
+- Base station successfully displays received emergency messages
