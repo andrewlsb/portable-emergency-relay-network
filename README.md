@@ -16,6 +16,7 @@ Current Milestone 4
 - [x] GPS fix acquired (6 satellites)
 - [x] OLED display integration
 - [x] GPS coordinates on OLED
+- [x] LoRa module verification
 - [ ] LoRa communication
 - [ ] Multi-hop relay network
 - [ ] Battery-powered deployment
@@ -40,15 +41,18 @@ Current Task: Milestone 4 (LoRa Communication)
 ## Hardware
 
 Current:
-- Arduino UNO R4 WiFi
-- NEO-6M GPS Module
-- SSD1306 0.96 inch I2C OLED Display
+
+Arduino UNO R4 WiFi
+NEO-6M GPS Module
+SSD1306 0.96 inch I2C OLED Display
+RYLR998 LoRa Module
 
 Future:
-- LoRa SX1276 915 MHz Radio Modules
-- ESP32 Development Boards
-- Battery packs
-- Enclosures
+
+Additional RYLR998 LoRa Modules
+STM32 Nucleo Development Board
+Battery packs
+Enclosures
 
 ## Repository Structure
 
@@ -128,3 +132,38 @@ LON: -122.xxxxxx
 ### Evidence
 
 ![GPS OLED](images/milestone3_gps_oled.png)
+
+## Milestone 4 Preparation - LoRa Module Verification
+
+### Objective
+
+Integrate the RYLR998 LoRa module with the Arduino UNO R4 WiFi and verify UART communication using AT commands.
+
+### Results
+
+- Successfully connected RYLR998 to the Arduino UNO R4 WiFi
+- Verified UART communication using Serial1
+- Confirmed module address configuration
+- Confirmed network ID configuration
+- Confirmed operation on the 915 MHz frequency band
+- Verified baud rate configuration
+
+### Example Output
+
++OK
+
++ADDRESS=0
+
++NETWORKID=18
+
++BAND=915000000
+
++IPR=115200
+
+### Evidence
+
+#### LoRa Module Verification
+
+LoRa Verification
+
+The RYLR998 LoRa module successfully responded to AT commands and returned valid configuration information, confirming UART communication and proper module operation.
