@@ -9,16 +9,21 @@ A battery-powered embedded communication system designed to provide GPS location
 - Milestone 3 Complete
 - Current Milestone: 4
 
-## Progress
+# Progress
 
 - [x] GPS module integration
 - [x] UART communication verified
 - [x] GPS fix acquired (6 satellites)
 - [x] OLED display integration
-- [x] GPS coordinates on OLED
+- [x] GPS coordinates displayed on OLED
 - [x] LoRa module verification
-- [ ] LoRa communication
+- [x] STM32 ↔ RYLR998 UART communication
+- [x] Point-to-point LoRa communication
+- [x] STM32 field unit → Arduino relay wireless transmission
+- [ ] Bidirectional LoRa communication
+- [ ] GPS coordinate transmission over LoRa
 - [ ] Multi-hop relay network
+- [ ] Emergency message protocol
 - [ ] Battery-powered deployment
 
 ## Project Goal
