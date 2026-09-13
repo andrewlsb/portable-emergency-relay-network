@@ -110,8 +110,7 @@ Satellites: 6
 
 ## Evidence
 
-![GPS Fix](images/milestone1_gps_fix.png)
-
+<img src="images/milestone1_gps_fix.png" width="550">
 ---
 
 # Milestone 2 - OLED Display Integration
@@ -135,8 +134,7 @@ HELLO
 
 ## Evidence
 
-![OLED Test](images/milestone2_oled_hello.png)
-
+<img src="images/milestone2_oled_hello.png" width="450">
 ---
 
 # Milestone 3 - GPS and OLED Integration
