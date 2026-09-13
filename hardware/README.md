@@ -1,41 +1,73 @@
 # Hardware Documentation
 
-This folder contains wiring diagrams, connection tables, and hardware notes for each project milestone.
+This folder contains wiring diagrams, connection tables, and hardware notes for the Portable Emergency Communication Relay Network.
 
 ## Current Hardware
 
+- STM32 NUCLEO-F446RE
+
 - Arduino UNO R4 WiFi
-- STM32 Nucleo Development Board
+
 - NEO-6M GPS Module
-- SSD1306 OLED Display
+
+- SSD1306 0.96 inch I2C OLED Display
+
 - RYLR998 LoRa Modules (3)
-- Breadboard
+
+- Breadboards
+
 - Jumper Wires
+
 - USB Cables
 
-## Planned System Architecture
+## Current System Architecture
 
-### Node A - Field Unit
+### Node A - STM32 Field Unit
 
-- STM32 Nucleo Development Board
+The field unit collects GPS location data, displays system status locally, and transmits GPS coordinates over LoRa.
+
+#### Hardware
+
+- STM32 NUCLEO-F446RE
+
 - NEO-6M GPS Module
-- SSD1306 OLED Display
+
+- SSD1306 0.96 inch I2C OLED Display
+
 - RYLR998 LoRa Module
-- Battery Pack
 
-### Node B - Relay Node
+- Breadboard and jumper wires
 
-- Arduino UNO R4 WiFi
-- RYLR998 LoRa Module
-- Battery Pack
+- USB power during development
 
-### Node C - Base Station
+#### Interfaces
 
-- PC
-- RYLR998 LoRa Module
-- USB-to-UART Adapter
+- NEO-6M GPS → STM32 using UART4
 
-## Wiring Guides
+- SSD1306 OLED → STM32 using I2C1
 
-- gps_oled_wiring.md
-- lora_wiring.md
+- RYLR998 LoRa → STM32 using USART1
+
+- STM32 → PC debugging using USART2
+
+#### Current Data Flow
+
+```text
+
+NEO-6M GPS
+
+     │
+
+     │ UART
+
+     ▼
+
+STM32 NUCLEO-F446RE
+
+     │
+
+     ├──── I2C ────► SSD1306 OLED
+
+     │
+
+     └──── UART ───► RYLR998 LoRa
