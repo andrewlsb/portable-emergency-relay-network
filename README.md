@@ -14,13 +14,13 @@ A battery-powered embedded communication system designed to provide GPS location
 
 - [x] GPS module integration
 - [x] UART communication verified
-- [x] GPS fix acquired (6 satellites)
+- [x] GPS fix acquired
 - [x] OLED display integration
 - [x] GPS coordinates displayed on OLED
 - [x] LoRa module verification
 - [x] STM32 ↔ RYLR998 UART communication
 - [x] Point-to-point LoRa communication
-- [x] STM32 field unit → Arduino relay wireless transmission
+- [x] STM32 field unit → Arduino receiver wireless transmission
 - [x] Bidirectional LoRa communication
 - [x] GPS coordinate transmission over LoRa
 - [ ] Multi-hop relay network
@@ -29,16 +29,20 @@ A battery-powered embedded communication system designed to provide GPS location
 
 ## Project Goal
 
-Build a portable emergency communication network capable of transmitting GPS coordinates and emergency SOS messages in environments without cellular or internet infrastructure. The system uses GPS-enabled field nodes, LoRa wireless communication, relay nodes, and a base station to deliver emergency location information over a multi-hop network.
+Build a portable emergency communication network capable of transmitting GPS coordinates and emergency SOS messages in environments without cellular or internet infrastructure.
+
+The system uses GPS-enabled field nodes, LoRa wireless communication, relay nodes, and a base station to deliver emergency location information over a multi-hop network.
 
 ## Documentation
 
-- Project Plan: docs/project_plan.md
-- System Architecture: docs/system_architecture.md
+- Project Plan: `docs/project_plan.md`
+- System Architecture: `docs/system_architecture.md`
 
 ## Current Milestone
 
-Current Task: Milestone 5 - Three-Node Relay Network
+**Current Task: Milestone 5 - Three-Node Relay Network**
+
+The next stage of development will introduce a third LoRa node capable of receiving packets from the field unit and forwarding them toward a base station.
 
 ## Planned Features
 
@@ -50,9 +54,9 @@ Current Task: Milestone 5 - Three-Node Relay Network
 - PC-based base station dashboard
 - Battery-powered field operation
 
-### Hardware
+## Hardware
 
-#### Current
+### Current
 
 - Arduino UNO R4 WiFi
 - STM32 NUCLEO-F446RE
@@ -60,16 +64,16 @@ Current Task: Milestone 5 - Three-Node Relay Network
 - SSD1306 0.96 inch I2C OLED Display
 - RYLR998 LoRa Modules (3)
 
-#### Future
+### Future
 
 - Battery Packs
 - Enclosures
 
 ## Repository Structure
 
-- `/docs` — project plan, BOM, and notes
+- `/docs` — project plan, BOM, architecture, and notes
 - `/hardware` — wiring notes and diagrams
-- `/software` — STM32 and Arduino firmware for each milestone
+- `/software` — embedded firmware and test programs
 - `/images` — project photos and screenshots
 
 ## Milestones
@@ -81,207 +85,354 @@ Current Task: Milestone 5 - Three-Node Relay Network
 5. Three-node relay network
 6. Battery-powered final prototype
 
-## Milestone 1 - GPS Integration
+---
 
-### Objective
+# Milestone 1 - GPS Integration
+
+## Objective
+
 Integrate the NEO-6M GPS module with the Arduino UNO R4 WiFi and verify location tracking.
 
-### Results
+## Results
+
 - GPS communication established using UART
 - TinyGPSPlus successfully decoded NMEA messages
-- GPS fix acquired with 6 satellites
+- GPS fix successfully acquired
 - Real-time latitude and longitude displayed in Serial Monitor
 
-### Example Output
+## Example Output
 
-Latitude: 47.667700  
-Longitude: -122.313024  
+```text
+Latitude: 47.667700
+Longitude: -122.313024
 Satellites: 6
+```
 
-### Evidence
+## Evidence
 
 ![GPS Fix](images/milestone1_gps_fix.png)
 
-## Milestone 2 - OLED Display Integration
+---
 
-### Objective
+# Milestone 2 - OLED Display Integration
+
+## Objective
+
 Integrate the SSD1306 OLED display with the Arduino UNO R4 WiFi and verify display functionality.
 
-### Results
+## Results
+
 - OLED display successfully initialized
 - I2C communication established using SDA and SCL
 - Text successfully displayed on OLED screen
 - Adafruit SSD1306 and GFX libraries integrated successfully
 
-### Example Output
+## Example Output
 
+```text
 HELLO
+```
 
-### Evidence
+## Evidence
 
 ![OLED Test](images/milestone2_oled_hello.png)
 
-## Milestone 3 - GPS and OLED Integration
+---
 
-### Objective
+# Milestone 3 - GPS and OLED Integration
+
+## Objective
+
 Integrate the NEO-6M GPS module and SSD1306 OLED display into a standalone embedded system.
 
-### Results
+## Results
+
 - GPS data successfully displayed on OLED screen
 - Real-time latitude and longitude updates verified
 - Satellite count displayed on OLED
 - GPS fix status displayed on OLED
 - Standalone operation achieved without Serial Monitor
 
-### Example Output
+## Example Output
 
-GPS STATUS  
-SAT: 6  
-FIX: YES  
-LAT: 47.xxxxxx  
+```text
+GPS STATUS
+SAT: 6
+FIX: YES
+LAT: 47.xxxxxx
 LON: -122.xxxxxx
+```
 
-### Evidence
+## Evidence
 
-![GPS OLED](images/milestone3_gps_oled.png)
+<img src="images/milestone3_gps_oled.png" width="450">
 
-## Milestone 4 - LoRa Communication and STM32 Field Node Integration
+---
 
-### Objective
+# Milestone 4 - LoRa Communication and STM32 Field Unit
 
-Integrate the RYLR998 LoRa modules and establish wireless communication between nodes. Migrate the field unit to the STM32 NUCLEO-F446RE and integrate GPS acquisition, OLED output, and LoRa transmission into a single embedded field node.
+## Objective
 
-### Results
+Develop an STM32-based field unit capable of acquiring GPS coordinates, displaying location information locally, and transmitting the coordinates wirelessly using RYLR998 LoRa transceivers.
 
-- Successfully connected RYLR998 to the Arduino UNO R4 WiFi
-- Verified RYLR998 UART communication using AT commands
-- Confirmed module address configuration
-- Confirmed network ID configuration
-- Confirmed operation on the 915 MHz frequency band
-- Verified 115200 baud rate configuration
-- Established point-to-point LoRa communication
-- Established bidirectional LoRa communication
-- Integrated RYLR998 with STM32 using USART1
-- Integrated NEO-6M GPS with STM32 using UART4 at 9600 baud
-- Received GPS NMEA data directly on STM32
-- Parsed GPGGA GPS messages on STM32
-- Extracted latitude, longitude, GPS fix status, and satellite count
-- Converted NMEA coordinates into decimal degrees
-- Integrated SSD1306 OLED with STM32 using I2C
-- Displayed live GPS coordinates on the STM32 field unit
-- Transmitted live GPS coordinates from STM32 over LoRa
-- Successfully received STM32 GPS packets on the Arduino receiver
+The field unit uses the STM32 NUCLEO-F446RE as the primary microcontroller and communicates with the GPS, OLED display, and LoRa transceiver through multiple embedded communication interfaces.
 
-### Evidence
+## Results
 
-#### LoRa Module Verification
+- Successfully connected the RYLR998 LoRa module to the STM32 NUCLEO-F446RE
+- Verified UART communication between the STM32 and RYLR998
+- Configured RYLR998 modules for point-to-point LoRa communication
+- Integrated the NEO-6M GPS module with the STM32
+- Received NMEA GPS sentences through UART
+- Parsed GPS latitude, longitude, fix status, and satellite count on the STM32
+- Integrated the SSD1306 OLED display using I2C
+- Displayed live GPS information on the OLED
+- Formatted GPS coordinates into LoRa data packets
+- Successfully transmitted live GPS coordinates from the STM32 field unit
+- Successfully received LoRa GPS packets on an Arduino UNO R4 WiFi receiving node
+- Verified continuous wireless GPS coordinate updates
 
-![LoRa Verification](images/milestone4_lora_setup.png)
+## Field Unit Architecture
 
-The RYLR998 LoRa module successfully responded to multiple AT commands. The module address, network ID, operating frequency, and baud rate were verified, confirming successful UART communication between the Arduino UNO R4 WiFi and the LoRa transceiver.
+The STM32 field unit combines GPS acquisition, local display, and wireless transmission.
 
-Verified Output:
+```text
+NEO-6M GPS
+     │
+     │ UART
+     ▼
+STM32 NUCLEO-F446RE
+     │
+     ├──── I2C ────► SSD1306 OLED
+     │
+     └──── UART ───► RYLR998 LoRa
+                          │
+                          │ Wireless LoRa
+                          ▼
+                     RYLR998 LoRa
+                          │
+                          │ UART
+                          ▼
+                  Arduino UNO R4 WiFi
+                          │
+                          ▼
+                     Serial Monitor
+```
 
+## Communication Interfaces
+
+The STM32 field unit currently uses:
+
+- **UART4** — NEO-6M GPS communication
+- **I2C1** — SSD1306 OLED communication
+- **USART1** — RYLR998 LoRa communication
+- **USART2** — debugging / PC serial communication
+
+## GPS Processing
+
+The NEO-6M sends standard NMEA GPS sentences to the STM32.
+
+The firmware identifies GGA sentences and extracts:
+
+- Latitude
+- Longitude
+- GPS fix status
+- Satellite count
+
+The NMEA coordinates are converted from degrees/minutes format into decimal degrees before transmission.
+
+Example processed coordinates:
+
+```text
+Latitude: 47.66768
+Longitude: -122.31279
+```
+
+## OLED Display
+
+After acquiring a valid GPS fix, the STM32 displays the current position and satellite information on the SSD1306 OLED.
+
+Example:
+
+```text
+GPS FIX
+
+LAT 47.66768
+LON -122.31284
+SAT 9
+```
+
+## LoRa Packet Format
+
+After obtaining a valid GPS position, the STM32 creates a payload containing the coordinates.
+
+Example payload:
+
+```text
+GPS,47.66768,-122.31279
+```
+
+The payload is transmitted through the RYLR998 using its AT command interface.
+
+Conceptually:
+
+```text
+GPS DATA
+   ↓
+STM32 parses coordinates
+   ↓
+GPS,47.66768,-122.31279
+   ↓
+RYLR998 transmitter
+   ↓
+~~~~ LoRa wireless link ~~~~
+   ↓
+RYLR998 receiver
+   ↓
+Arduino UNO R4 WiFi
+```
+
+## Example Received Data
+
+The Arduino receiving node successfully received continuously updated GPS packets:
+
+```text
++RCV=1,23,GPS,47.66768,-122.31279,-25,11
++RCV=1,23,GPS,47.66768,-122.31279,-23,12
++RCV=1,23,GPS,47.66768,-122.31279,-23,12
++RCV=1,23,GPS,47.66768,-122.31279,-22,11
++RCV=1,23,GPS,47.66768,-122.31279,-22,11
+```
+
+The RYLR998 receive response provides the sender address, payload length, received GPS payload, RSSI, and SNR.
+
+---
+
+## Milestone 4 Evidence
+
+### LoRa Module Verification
+
+<img src="images/milestone4_lora_setup.png" width="700">
+
+The RYLR998 LoRa module successfully responded to AT commands during initial testing.
+
+The module address, network ID, operating frequency, baud rate, and LoRa communication parameters were verified before integration with the STM32 field unit.
+
+Verified configuration included:
+
+```text
 +OK
-
 +ADDRESS=0
-
 +NETWORKID=18
-
 +BAND=915000000
-
 +IPR=115200
-
 +PARAMETER=9,7,1,12
+```
 
-### STM32 Field Node
+### STM32 Field Unit Prototype
 
-The STM32 NUCLEO-F446RE now serves as the main field unit.
+<img src="images/milestone4_stm32_field_unit.png" width="600">
 
-The field node receives raw NMEA data from the NEO-6M GPS module through UART4. The STM32 identifies GPGGA messages and extracts latitude, longitude, GPS fix status, and satellite count.
+The STM32 NUCLEO-F446RE field unit integrates the NEO-6M GPS module, SSD1306 OLED display, and RYLR998 LoRa transceiver.
 
-The coordinates are converted from NMEA format into decimal degrees and displayed locally on the SSD1306 OLED.
+The prototype demonstrates the hardware configuration used to acquire GPS information and transmit it wirelessly.
 
-The same coordinates are then formatted into a LoRa payload and transmitted through the RYLR998 connected to USART1.
+### Live GPS Display
 
-### Current Field Node Architecture
+<img src="images/milestone4_gps_oled.png" width="450">
 
-NEO-6M GPS  
-↓ UART4  
+The SSD1306 OLED displays live GPS information processed by the STM32, including GPS fix status, latitude, longitude, and satellite count.
 
-STM32 NUCLEO-F446RE  
+### Wireless GPS Reception
 
-↓ I2C → SSD1306 OLED  
+<img src="images/milestone4_gps_lora_received.png" width="750">
 
-↓ USART1  
+Live GPS coordinates transmitted by the STM32 field unit were successfully received wirelessly by the Arduino UNO R4 WiFi receiving node through a second RYLR998 LoRa module.
 
-RYLR998 LoRa  
+Multiple consecutive packets confirm continuous GPS transmission rather than a single test message.
 
-↓ Wireless LoRa  
+## Milestone 4 Outcome
 
-RYLR998 LoRa  
+Milestone 4 establishes a complete end-to-end embedded wireless communication path:
 
-↓ UART  
+```text
+GPS Acquisition
+      ↓
+STM32 GPS Parsing
+      ↓
+OLED Status Display
+      ↓
+LoRa Packet Generation
+      ↓
+RYLR998 Transmission
+      ↓
+Wireless LoRa Link
+      ↓
+RYLR998 Reception
+      ↓
+Arduino Receiving Node
+```
 
-Arduino UNO R4 WiFi  
+The successful transmission of live GPS coordinates demonstrates that the field node can collect real-world sensor data, process it locally, and transmit it to another embedded node without cellular or internet infrastructure.
 
-↓ USB  
+This provides the foundation for **Milestone 5**, where a third LoRa node will be introduced to create a multi-hop relay network.
 
-Serial Monitor
+---
 
-### GPS Coordinate Transmission
+# Milestone 5 - Three-Node Relay Network
 
-The STM32 field unit formats the GPS coordinates into a simple LoRa payload.
+## Objective
 
-Example transmitted payload:
+Extend the point-to-point LoRa communication system into a three-node network capable of forwarding messages through an intermediate relay.
 
-GPS,47.66776,-122.31289
+### Planned Architecture
 
-Example received packets:
+```text
+FIELD NODE
+STM32 + GPS + OLED + LoRa
+          │
+          │ LoRa
+          ▼
+     RELAY NODE
+   MCU + RYLR998
+          │
+          │ LoRa
+          ▼
+     BASE STATION
+   MCU + RYLR998
+          │
+          ▼
+          PC
+```
 
-+RCV=1,23,GPS,47.66776,-122.31289,-41,11
+### Planned Tasks
 
-+RCV=1,23,GPS,47.66776,-122.31289,-39,11
+- [ ] Configure third RYLR998 LoRa module
+- [ ] Assign unique node addresses
+- [ ] Implement relay packet reception
+- [ ] Implement packet forwarding
+- [ ] Define packet structure
+- [ ] Add source and destination identifiers
+- [ ] Prevent duplicate packet forwarding
+- [ ] Verify Field → Relay → Base communication
+- [ ] Test GPS coordinate forwarding
+- [ ] Measure RSSI and communication reliability
 
-+RCV=1,23,GPS,47.66776,-122.31289,-35,11
+---
 
-+RCV=1,23,GPS,47.66775,-122.31289,-35,10
+# Future Development
 
-This demonstrates successful end-to-end communication:
+After completing the three-node relay network, development will continue toward:
 
-GPS → STM32 → LoRa → Wireless Link → LoRa Receiver → Arduino
+- Emergency SOS message generation
+- Message identifiers and duplicate detection
+- Multi-hop routing logic
+- Packet acknowledgments
+- Communication reliability testing
+- Range testing
+- Packet delivery ratio measurements
+- Battery power management
+- Portable enclosures
+- PC-based emergency monitoring interface
 
-### Milestone 4 Outcome
-
-A functional STM32-based field node was successfully developed.
-
-The field unit can:
-
-- Acquire a GPS fix
-- Receive GPS data over UART
-- Parse NMEA GPS messages
-- Calculate decimal latitude and longitude
-- Display GPS information on the OLED
-- Communicate with the RYLR998 over UART
-- Transmit GPS coordinates wirelessly using LoRa
-- Receive messages from another LoRa node
-
-Milestone 4 establishes the communication and embedded hardware foundation required for the multi-hop relay network.
-
-## Milestone 5 - Three-Node Relay Network
-
-### Objective
-
-Develop a three-node LoRa network capable of forwarding GPS and emergency messages across multiple wireless hops.
-
-### Planned Work
-
-- Define a structured packet format
-- Assign unique node IDs
-- Add packet IDs
-- Implement relay forwarding
-- Implement duplicate packet detection
-- Prevent relay loops
-- Test Field Node → Relay Node → Base Station communication
-- Verify GPS coordinate transmission across multiple hops
-- Begin emergency SOS message implementation
+The final goal is a portable network of embedded nodes capable of forwarding emergency location information across areas where conventional cellular or internet communication is unavailable.
