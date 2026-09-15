@@ -307,8 +307,6 @@ These basic packets were later replaced by the structured PECRN Protocol V1 form
 +RCV=1,23,GPS,47.66768,-122.31279,-22,11
 ```
 
----
-
 ## Milestone 4 Evidence
 
 ### LoRa Module Verification
@@ -672,6 +670,95 @@ P1,GPS,1,289,47.66769,-122.31283,6
 ```
 
 For each forwarded packet, the Base Station returned the corresponding `BACK`.
+
+---
+
+# Milestone 5 Evidence
+
+The following images document the complete three-node prototype and the Protocol V1 communication observed at each stage of the network.
+
+## Three-Node Hardware Prototype
+
+<img src="images/milestone5_three_node_hardware.png" width="750">
+
+The complete PECRN Milestone 5 prototype consists of the STM32 field unit, Arduino UNO R4 relay node, and PC-based base station. Three RYLR998 LoRa transceivers provide the wireless links between the nodes.
+
+The laptop runs the Python base-station interface through a CP2102 USB-to-UART adapter connected to the base-station RYLR998.
+
+### STM32 Field Node Protocol
+
+<img src="images/milestone5_stm32_protocol.png" width="750">
+
+The STM32CubeIDE debug console shows Protocol V1 operation from the field node. Packets are assigned unique packet IDs and transmitted to the relay while the field node waits for the corresponding `RACK`.
+
+The screenshot also demonstrates emergency SOS generation. Packet 12 is generated as:
+
+```text
+P1,SOS,1,12,NO_GPS
+```
+
+The relay responds with:
+
+```text
+P1,RACK,1,12
+```
+
+confirming that the emergency packet was accepted.
+
+### Arduino Relay Protocol
+
+<img src="images/milestone5_relay_protocol.png" width="750">
+
+The Arduino Serial Monitor demonstrates the intermediate relay operation. Incoming Field packets are accepted into the software queue, acknowledged with `RACK`, and forwarded toward the Base Station.
+
+The screenshot also demonstrates:
+
+- Relay queue operation
+- Field packet acknowledgement
+- Base Station forwarding
+- `BACK` acknowledgement reception
+- Completed-packet history
+- SOS priority
+
+For the SOS packet, the Relay identifies the emergency traffic and prioritizes it:
+
+```text
+[QUEUE] *** SOS PRIORITY ***
+```
+
+After forwarding the packet, the Base Station returns the corresponding `BACK`, confirming successful end-to-end delivery.
+
+### PC Base Station SOS Reception
+
+<img src="images/milestone5_base_station_sos.png" width="750">
+
+The Python Base Station terminal demonstrates the final stage of the communication path.
+
+The Base Station accepts packets forwarded by LoRa address `0` and rejects packets received directly from Field address `1`. This ensures that the tested application path follows the intended:
+
+```text
+Field → Relay → Base
+```
+
+topology.
+
+The screenshot also demonstrates reception of emergency packet 12 and displays an SOS alert with:
+
+```text
+GPS : NO GPS FIX
+```
+
+The Base Station then returns:
+
+```text
+P1,BACK,1,12
+```
+
+to the Relay.
+
+Together, these four images demonstrate the physical prototype and successful application-layer communication across all three PECRN nodes.
+
+---
 
 ## Milestone 5 Results
 
