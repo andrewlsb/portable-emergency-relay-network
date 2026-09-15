@@ -1,6 +1,8 @@
 # Portable Emergency Communication Relay Network
 
-A battery-powered embedded communication system designed to provide GPS location tracking and emergency messaging in environments without cellular or internet infrastructure.
+A portable embedded communication system designed to provide GPS location tracking and emergency messaging in environments without cellular or internet infrastructure.
+
+PECRN uses an STM32 field unit, LoRa wireless communication, an Arduino relay node, and a PC-based base station to reliably deliver GPS telemetry, system status, and emergency SOS messages.
 
 ## Status
 
@@ -8,7 +10,8 @@ A battery-powered embedded communication system designed to provide GPS location
 - Milestone 2 Complete
 - Milestone 3 Complete
 - Milestone 4 Complete
-- Current Milestone: 5
+- Milestone 5 Complete
+- Current Milestone: 6 - Portable Deployment and System Testing
 
 # Progress
 
@@ -23,36 +26,71 @@ A battery-powered embedded communication system designed to provide GPS location
 - [x] STM32 field unit → Arduino receiver wireless transmission
 - [x] Bidirectional LoRa communication
 - [x] GPS coordinate transmission over LoRa
-- [ ] Multi-hop relay network
-- [ ] Emergency message protocol
+- [x] Three-node relay network
+- [x] Field → Relay → Base communication
+- [x] PECRN Protocol V1
+- [x] Packet identification
+- [x] Field → Relay acknowledgements
+- [x] Relay → Base acknowledgements
+- [x] Automatic retransmission
+- [x] Relay packet queue
+- [x] Duplicate packet detection
+- [x] FIFO telemetry forwarding
+- [x] SOS priority
+- [x] Emergency SOS messages
+- [x] GPS validation and last-known position
+- [x] PC-based base station
 - [ ] Battery-powered deployment
+- [ ] Range and reliability testing
+- [ ] Portable enclosure
 
 ## Project Goal
 
 Build a portable emergency communication network capable of transmitting GPS coordinates and emergency SOS messages in environments without cellular or internet infrastructure.
 
-The system uses GPS-enabled field nodes, LoRa wireless communication, relay nodes, and a base station to deliver emergency location information over a multi-hop network.
+The current prototype uses a GPS-enabled STM32 field node, an Arduino LoRa relay, and a PC-based base station.
+
+The system implements reliable packet delivery using acknowledgements, retransmission, packet buffering, duplicate detection, and emergency-message prioritization.
 
 ## Documentation
 
 - Project Plan: `docs/project_plan.md`
 - System Architecture: `docs/system_architecture.md`
 
-## Current Milestone
+## Current System
 
-**Current Task: Milestone 5 - Three-Node Relay Network**
-
-The next stage of development will introduce a third LoRa node capable of receiving packets from the field unit and forwarding them toward a base station.
+```text
+STM32 FIELD UNIT
+LoRa Address 1
+GPS + OLED + SOS
+       │
+       │ GPS / STATUS / SOS
+       ▼
+ARDUINO RELAY
+LoRa Address 0
+       │
+       │ Forwarded Packet
+       ▼
+BASE STATION
+LoRa Address 2
+       │
+       ▼
+Python PC Interface
+```
 
 ## Planned Features
 
-- GPS location tracking
-- OLED status display
-- Emergency SOS message generation
-- LoRa wireless communication
-- Multi-hop relay forwarding
-- PC-based base station dashboard
-- Battery-powered field operation
+- [x] GPS location tracking
+- [x] OLED status display
+- [x] Emergency SOS message generation
+- [x] LoRa wireless communication
+- [x] Relay forwarding
+- [x] PC-based base station
+- [x] Reliable acknowledgement protocol
+- [x] Duplicate protection
+- [ ] Battery-powered field operation
+- [ ] Portable enclosure
+- [ ] Extended range testing
 
 ## Hardware
 
@@ -63,6 +101,8 @@ The next stage of development will introduce a third LoRa node capable of receiv
 - NEO-6M GPS Module
 - SSD1306 0.96 inch I2C OLED Display
 - RYLR998 LoRa Modules (3)
+- CP2102 USB-to-UART Adapter
+- PC / macOS Base Station
 
 ### Future
 
@@ -71,19 +111,12 @@ The next stage of development will introduce a third LoRa node capable of receiv
 
 ## Repository Structure
 
-- `/docs` — project plan, BOM, architecture, and notes
-- `/hardware` — wiring notes and diagrams
-- `/software` — embedded firmware and test programs
-- `/images` — project photos and screenshots
-
-## Milestones
-
-1. GPS test using Serial Monitor
-2. OLED test display
-3. GPS data displayed on OLED
-4. LoRa communication and STM32 field node integration
-5. Three-node relay network
-6. Battery-powered final prototype
+```text
+/docs       — project plan, BOM, architecture, and notes
+/hardware   — wiring notes and diagrams
+/software   — embedded firmware and base station software
+/images     — project photos and screenshots
+```
 
 ---
 
@@ -111,6 +144,7 @@ Satellites: 6
 ## Evidence
 
 <img src="images/milestone1_gps_fix.png" width="550">
+
 ---
 
 # Milestone 2 - OLED Display Integration
@@ -135,6 +169,7 @@ HELLO
 ## Evidence
 
 <img src="images/milestone2_oled_hello.png" width="450">
+
 ---
 
 # Milestone 3 - GPS and OLED Integration
@@ -192,39 +227,31 @@ The field unit uses the STM32 NUCLEO-F446RE as the primary microcontroller and c
 
 ## Field Unit Architecture
 
-The STM32 field unit combines GPS acquisition, local display, and wireless transmission.
-
 ```text
 NEO-6M GPS
      │
-     │ UART
+     │ UART4
      ▼
 STM32 NUCLEO-F446RE
      │
-     ├──── I2C ────► SSD1306 OLED
+     ├──── I2C1 ────► SSD1306 OLED
      │
-     └──── UART ───► RYLR998 LoRa
-                          │
-                          │ Wireless LoRa
-                          ▼
-                     RYLR998 LoRa
-                          │
-                          │ UART
-                          ▼
-                  Arduino UNO R4 WiFi
-                          │
-                          ▼
-                     Serial Monitor
+     └──── USART1 ──► RYLR998 LoRa
+                           │
+                           │ Wireless LoRa
+                           ▼
+                      RYLR998 LoRa
+                           │
+                           ▼
+                   Arduino UNO R4 WiFi
 ```
 
 ## Communication Interfaces
 
-The STM32 field unit currently uses:
-
-- **UART4** — NEO-6M GPS communication
-- **I2C1** — SSD1306 OLED communication
-- **USART1** — RYLR998 LoRa communication
-- **USART2** — debugging / PC serial communication
+- **UART4** — NEO-6M GPS communication at 9600 baud
+- **I2C1** — SSD1306 OLED communication at 100 kHz
+- **USART1** — RYLR998 LoRa communication at 115200 baud
+- **USART2** — debugging / PC serial communication at 115200 baud
 
 ## GPS Processing
 
@@ -262,37 +289,15 @@ SAT 9
 
 ## LoRa Packet Format
 
-After obtaining a valid GPS position, the STM32 creates a payload containing the coordinates.
-
-Example payload:
+During Milestone 4, the STM32 transmitted basic GPS payloads such as:
 
 ```text
 GPS,47.66768,-122.31279
 ```
 
-The payload is transmitted through the RYLR998 using its AT command interface.
-
-Conceptually:
-
-```text
-GPS DATA
-   ↓
-STM32 parses coordinates
-   ↓
-GPS,47.66768,-122.31279
-   ↓
-RYLR998 transmitter
-   ↓
-~~~~ LoRa wireless link ~~~~
-   ↓
-RYLR998 receiver
-   ↓
-Arduino UNO R4 WiFi
-```
+These basic packets were later replaced by the structured PECRN Protocol V1 format implemented during Milestone 5.
 
 ## Example Received Data
-
-The Arduino receiving node successfully received continuously updated GPS packets:
 
 ```text
 +RCV=1,23,GPS,47.66768,-122.31279,-25,11
@@ -301,8 +306,6 @@ The Arduino receiving node successfully received continuously updated GPS packet
 +RCV=1,23,GPS,47.66768,-122.31279,-22,11
 +RCV=1,23,GPS,47.66768,-122.31279,-22,11
 ```
-
-The RYLR998 receive response provides the sender address, payload length, received GPS payload, RSSI, and SNR.
 
 ---
 
@@ -313,8 +316,6 @@ The RYLR998 receive response provides the sender address, payload length, receiv
 <img src="images/milestone4_lora_setup.png" width="700">
 
 The RYLR998 LoRa module successfully responded to AT commands during initial testing.
-
-The module address, network ID, operating frequency, baud rate, and LoRa communication parameters were verified before integration with the STM32 field unit.
 
 Verified configuration included:
 
@@ -333,8 +334,6 @@ Verified configuration included:
 
 The STM32 NUCLEO-F446RE field unit integrates the NEO-6M GPS module, SSD1306 OLED display, and RYLR998 LoRa transceiver.
 
-The prototype demonstrates the hardware configuration used to acquire GPS information and transmit it wirelessly.
-
 ### Live GPS Display
 
 <img src="images/milestone4_gps_oled.png" width="450">
@@ -347,90 +346,438 @@ The SSD1306 OLED displays live GPS information processed by the STM32, including
 
 Live GPS coordinates transmitted by the STM32 field unit were successfully received wirelessly by the Arduino UNO R4 WiFi receiving node through a second RYLR998 LoRa module.
 
-Multiple consecutive packets confirm continuous GPS transmission rather than a single test message.
-
 ## Milestone 4 Outcome
 
-Milestone 4 establishes a complete end-to-end embedded wireless communication path:
-
-```text
-GPS Acquisition
-      ↓
-STM32 GPS Parsing
-      ↓
-OLED Status Display
-      ↓
-LoRa Packet Generation
-      ↓
-RYLR998 Transmission
-      ↓
-Wireless LoRa Link
-      ↓
-RYLR998 Reception
-      ↓
-Arduino Receiving Node
-```
-
-The successful transmission of live GPS coordinates demonstrates that the field node can collect real-world sensor data, process it locally, and transmit it to another embedded node without cellular or internet infrastructure.
-
-This provides the foundation for **Milestone 5**, where a third LoRa node will be introduced to create a multi-hop relay network.
+Milestone 4 established the initial embedded wireless communication path and provided the foundation for the complete three-node relay architecture implemented in Milestone 5.
 
 ---
 
-# Milestone 5 - Three-Node Relay Network
+# Milestone 5 - Three-Node Reliable Relay Network
 
 ## Objective
 
-Extend the point-to-point LoRa communication system into a three-node network capable of forwarding messages through an intermediate relay.
+Extend the point-to-point LoRa system into a three-node communication network capable of reliably forwarding GPS telemetry, status information, and emergency SOS messages through an intermediate relay to a PC-based base station.
 
-### Planned Architecture
+## Final Architecture
 
 ```text
 FIELD NODE
-STM32 + GPS + OLED + LoRa
-          │
-          │ LoRa
-          ▼
-     RELAY NODE
-   MCU + RYLR998
-          │
-          │ LoRa
-          ▼
-     BASE STATION
-   MCU + RYLR998
-          │
-          ▼
-          PC
+STM32 NUCLEO-F446RE
+LoRa Address 1
+GPS + OLED + SOS
+        │
+        │ GPS / STATUS / SOS
+        ▼
+RELAY NODE
+Arduino UNO R4 WiFi
+LoRa Address 0
+        │
+        │ Forwarded Packet
+        ▼
+BASE STATION
+RYLR998
+LoRa Address 2
+        │
+        ▼
+Python Base Station
 ```
 
-### Planned Tasks
+## PECRN Protocol V1
 
-- [ ] Configure third RYLR998 LoRa module
-- [ ] Assign unique node addresses
-- [ ] Implement relay packet reception
-- [ ] Implement packet forwarding
-- [ ] Define packet structure
-- [ ] Add source and destination identifiers
-- [ ] Prevent duplicate packet forwarding
-- [ ] Verify Field → Relay → Base communication
-- [ ] Test GPS coordinate forwarding
-- [ ] Measure RSSI and communication reliability
+Milestone 5 introduces a structured application-layer packet format:
+
+```text
+P1,<TYPE>,<NODE_ID>,<PACKET_ID>,<DATA...>
+```
+
+Supported packet types include:
+
+```text
+GPS
+STATUS
+SOS
+RACK
+BACK
+```
+
+### GPS
+
+```text
+P1,GPS,1,<packetID>,<latitude>,<longitude>,<satellites>
+```
+
+Example:
+
+```text
+P1,GPS,1,286,47.66769,-122.31281,6
+```
+
+### STATUS
+
+```text
+P1,STATUS,1,<packetID>,GPS_FIX,<satellites>
+```
+
+Example:
+
+```text
+P1,STATUS,1,285,GPS_FIX,6
+```
+
+Other status conditions include:
+
+```text
+GPS_LOST
+NO_GPS
+```
+
+### SOS
+
+The field unit can generate an emergency SOS packet containing:
+
+- Current GPS position when a valid fix exists
+- Last-known GPS position when the current fix has been lost
+- `NO_GPS` when no valid position is available
+
+---
+
+# Reliable Packet Delivery
+
+Milestone 5 implements acknowledgement-based delivery on both wireless stages.
+
+## Field → Relay
+
+```text
+FIELD                               RELAY
+
+  │                                   │
+  │ GPS / STATUS / SOS                │
+  ├──────────────────────────────────►│
+  │                                   │
+  │       P1,RACK,1,<packetID>        │
+  │◄──────────────────────────────────┤
+  │                                   │
+```
+
+`RACK` confirms that the Relay has accepted and stored the Field packet.
+
+If the expected acknowledgement is not received, the Field Unit automatically retries the packet.
+
+Current Field configuration:
+
+```text
+RACK timeout     = 2000 ms
+Maximum attempts = 3
+Retry delay      = 100 ms
+```
+
+USART1 reception on the STM32 uses interrupt-driven UART reception with a software ring buffer so incoming RYLR998 responses can be captured reliably.
+
+---
+
+## Relay → Base
+
+```text
+RELAY                                BASE
+
+  │                                   │
+  │ GPS / STATUS / SOS                │
+  ├──────────────────────────────────►│
+  │                                   │
+  │       P1,BACK,1,<packetID>        │
+  │◄──────────────────────────────────┤
+  │                                   │
+```
+
+`BACK` confirms successful delivery to the Base Station.
+
+Current Relay configuration:
+
+```text
+BACK timeout      = 2000 ms
+Maximum attempts  = 3
+Retry backoff     = 5000 ms
+Queue size        = 10 packets
+Completed history = 32 packets
+```
+
+Packets that do not receive `BACK` remain stored for later retry.
+
+---
+
+# Relay Queue
+
+The Arduino Relay implements a 10-packet software queue.
+
+Normal telemetry uses strict FIFO ordering:
+
+```text
+Oldest STATUS/GPS
+        │
+        ▼
+      Base
+```
+
+SOS packets receive priority:
+
+```text
+Normal Packet
+Normal Packet
+SOS Packet       ← PRIORITY
+Normal Packet
+```
+
+The Relay also implements a quiet period after Field traffic so Field ↔ Relay acknowledgement traffic is given priority before Relay → Base transmission begins.
+
+---
+
+# Duplicate Protection
+
+Each application packet contains a packet ID.
+
+The Relay checks incoming packets against:
+
+1. Packets currently stored in the active queue
+2. Recently completed packets
+
+If a duplicate exists in the active queue, the Relay sends `RACK` again without storing another copy.
+
+If the packet has already been delivered to the Base Station, the Relay also sends `RACK` again without forwarding the packet.
+
+This protects the system against duplicate delivery when an acknowledgement is lost.
+
+---
+
+# SOS Emergency Messaging
+
+The STM32 field unit uses the NUCLEO B1 / PC13 button as the emergency input.
+
+The button is handled using an external interrupt and software debounce.
+
+SOS messages receive transmission priority over ordinary GPS and STATUS telemetry.
+
+Depending on GPS state, the Field Unit transmits:
+
+```text
+CURRENT GPS POSITION
+```
+
+or:
+
+```text
+LAST KNOWN GPS POSITION
+```
+
+or:
+
+```text
+NO_GPS
+```
+
+The OLED also displays emergency transmission status locally.
+
+---
+
+# Base Station
+
+The Base Station runs Python on a PC connected to an RYLR998 through a CP2102 USB-to-UART adapter.
+
+The Base Station:
+
+- Receives packets from the Relay
+- Rejects direct Field transmissions
+- Parses Protocol V1
+- Displays packet IDs
+- Displays STATUS information
+- Displays GPS coordinates
+- Displays satellite count
+- Processes SOS messages
+- Returns `BACK` acknowledgements
+
+Example received STATUS packet:
+
+```text
+============================================================
+Node 1 | Packet 285
+TYPE       : STATUS
+STATUS     : GPS_FIX
+SATELLITES : 6
+============================================================
+```
+
+Example received GPS packet:
+
+```text
+============================================================
+Node 1 | Packet 286
+TYPE       : GPS
+LATITUDE   : 47.66769
+LONGITUDE  : -122.31281
+SATELLITES : 6
+============================================================
+```
+
+After processing the packet, the Base Station responds:
+
+```text
+P1,BACK,1,286
+```
+
+---
+
+# Milestone 5 Verification
+
+The complete three-node communication path has been successfully demonstrated:
+
+```text
+NEO-6M GPS
+     │
+     ▼
+STM32 FIELD NODE
+     │
+     │ GPS / STATUS / SOS
+     ▼
+RYLR998
+     │
+     │ LoRa
+     ▼
+ARDUINO RELAY
+     │
+     │ Queue + Duplicate Detection
+     │
+     │ RACK ─────────────► Field
+     │
+     │ Forward
+     ▼
+RYLR998 BASE
+     │
+     ▼
+PYTHON BASE STATION
+     │
+     │ BACK
+     ▼
+ARDUINO RELAY
+```
+
+During testing, consecutive GPS and STATUS packets were successfully forwarded through the Relay and acknowledged by the Base Station.
+
+Example:
+
+```text
+P1,STATUS,1,285,GPS_FIX,6
+P1,GPS,1,286,47.66769,-122.31281,6
+P1,GPS,1,287,47.66768,-122.31283,6
+P1,STATUS,1,288,GPS_FIX,6
+P1,GPS,1,289,47.66769,-122.31283,6
+```
+
+For each forwarded packet, the Base Station returned the corresponding `BACK`.
+
+## Milestone 5 Results
+
+- [x] Third RYLR998 configured
+- [x] Unique LoRa addresses assigned
+- [x] PECRN Protocol V1 defined
+- [x] Field packet IDs implemented
+- [x] Relay packet reception implemented
+- [x] Relay packet forwarding implemented
+- [x] Field → Relay RACK acknowledgement implemented
+- [x] Relay → Base BACK acknowledgement implemented
+- [x] Field retransmission implemented
+- [x] Relay retransmission implemented
+- [x] Retry backoff implemented
+- [x] 10-packet Relay queue implemented
+- [x] FIFO telemetry forwarding implemented
+- [x] SOS priority implemented
+- [x] Active duplicate detection implemented
+- [x] Completed packet history implemented
+- [x] Queue-full protection implemented
+- [x] GPS coordinate forwarding verified
+- [x] STATUS forwarding verified
+- [x] PC Base Station implemented
+- [x] Complete Field → Relay → Base path verified
+- [x] Emergency SOS packet generation implemented
+
+## Milestone 5 Outcome
+
+Milestone 5 transforms PECRN from a point-to-point LoRa demonstration into a functional three-node emergency communication prototype.
+
+The system can now acquire real-world GPS data, display it locally, generate structured telemetry and emergency messages, reliably transfer those packets to an intermediate relay, buffer and forward them, detect duplicates, prioritize SOS traffic, and deliver the information to a PC-based Base Station.
+
+---
+
+# Current System Architecture
+
+```text
+                     PECRN
+
+              ┌────────────────┐
+              │   NEO-6M GPS   │
+              └───────┬────────┘
+                      │
+                      ▼
+              ┌────────────────┐
+              │  STM32 FIELD   │
+              │   Address 1    │
+              │                │
+              │ GPS Processing │
+              │ OLED           │
+              │ SOS            │
+              └───────┬────────┘
+                      │
+                      │ LoRa
+                      ▼
+              ┌────────────────┐
+              │ ARDUINO RELAY  │
+              │   Address 0    │
+              │                │
+              │ Queue          │
+              │ Retry          │
+              │ Duplicates     │
+              │ SOS Priority   │
+              └───────┬────────┘
+                      │
+                      │ LoRa
+                      ▼
+              ┌────────────────┐
+              │  BASE STATION  │
+              │   Address 2    │
+              │                │
+              │ Python Parser  │
+              │ Terminal UI    │
+              └────────────────┘
+```
 
 ---
 
 # Future Development
 
-After completing the three-node relay network, development will continue toward:
+With the reliable three-node relay network complete, the next development stage focuses on turning the prototype into a portable deployable system.
 
-- Emergency SOS message generation
-- Message identifiers and duplicate detection
-- Multi-hop routing logic
-- Packet acknowledgments
-- Communication reliability testing
+Planned work includes:
+
+- Battery-powered field operation
+- Battery-powered relay operation
+- Portable enclosures
 - Range testing
 - Packet delivery ratio measurements
-- Battery power management
-- Portable enclosures
-- PC-based emergency monitoring interface
+- Latency measurements
+- RSSI/SNR characterization
+- Communication reliability testing
+- Failure/recovery testing
+- Extended outdoor testing
 
-The final goal is a portable network of embedded nodes capable of forwarding emergency location information across areas where conventional cellular or internet communication is unavailable.
+Possible future expansion beyond the current prototype includes:
+
+- Multiple relay nodes
+- Dynamic routing
+- Automatic route discovery
+- Larger emergency communication networks
+
+The current implementation intentionally uses a fixed:
+
+```text
+Field → Relay → Base
+```
+
+topology. Dynamic multi-relay routing is not yet implemented.
