@@ -1,132 +1,402 @@
 import serial
 import time
+from datetime import datetime
 
-SERIAL_PORT = "/dev/cu.usbserial-0001"   # Update after CP2102 arrives
+# ============================================================
+# PECRN BASE STATION - PROTOCOL V1
+# ============================================================
+
+SERIAL_PORT = "/dev/cu.usbserial-0001"
 BAUD_RATE = 115200
 
+PROTOCOL_VERSION = "P1"
 
-def parse_packet(line):
+RELAY_ADDRESS = 0
+BASE_ADDRESS = 2
+
+# Remember recently received packets so retries are not
+# displayed/logged multiple times.
+HISTORY_SIZE = 100
+
+received_history = []
+ser = None
+
+
+# ============================================================
+# HELPERS
+# ============================================================
+
+def timestamp():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def already_received(node_id, packet_id):
+    return (node_id, packet_id) in received_history
+
+
+def remember_packet(node_id, packet_id):
+    received_history.append((node_id, packet_id))
+
+    if len(received_history) > HISTORY_SIZE:
+        received_history.pop(0)
+
+
+# ============================================================
+# SEND THROUGH RYLR998
+# ============================================================
+
+def send_lora(destination, payload):
+    command = (
+        f"AT+SEND={destination},"
+        f"{len(payload.encode('utf-8'))},"
+        f"{payload}\r\n"
+    )
+
+    ser.write(command.encode("utf-8"))
+    ser.flush()
+
+
+# ============================================================
+# SEND BASE ACK
+# ============================================================
+
+def send_back(node_id, packet_id):
+    payload = f"P1,BACK,{node_id},{packet_id}"
+
+    send_lora(RELAY_ADDRESS, payload)
+
+    print(f"[BACK -> RELAY] {payload}")
+
+
+# ============================================================
+# PARSE RYLR998 +RCV MESSAGE
+# ============================================================
+
+def parse_rcv(line):
     """
-    Expected format:
-    +RCV=<sender>,<length>,<payload>,<RSSI>,<SNR>
+    RYLR998 format:
+
+    +RCV=<address>,<length>,<data>,<RSSI>,<SNR>
+
+    Because our data contains commas, we MUST use the
+    length field instead of simply splitting the whole line.
     """
 
     if not line.startswith("+RCV="):
         return None
 
     try:
-        content = line[5:]
+        first_comma = line.index(",")
 
-        first_comma = content.index(",")
-        sender = content[:first_comma]
+        source = int(line[5:first_comma])
 
-        remaining = content[first_comma + 1:]
+        second_comma = line.index(",", first_comma + 1)
 
-        second_comma = remaining.index(",")
-        payload_length = int(remaining[:second_comma])
+        payload_length = int(
+            line[first_comma + 1:second_comma]
+        )
 
         payload_start = second_comma + 1
         payload_end = payload_start + payload_length
 
-        payload = remaining[payload_start:payload_end]
+        if payload_end > len(line):
+            return None
 
-        radio_data = remaining[payload_end + 1:]
-        radio_parts = radio_data.split(",")
+        payload = line[payload_start:payload_end]
 
-        rssi = radio_parts[0]
-        snr = radio_parts[1]
-
-        return sender, payload, rssi, snr
+        return source, payload
 
     except (ValueError, IndexError):
         return None
 
 
-def display_packet(sender, payload, rssi, snr):
-    print("\n" + "=" * 45)
-    print("        PECRN BASE STATION")
-    print("=" * 45)
+# ============================================================
+# PROCESS APPLICATION PACKET
+# ============================================================
 
-    print(f"SENDER:        {sender}")
+def process_packet(source, payload):
 
-    if payload.startswith("GPS,"):
-        parts = payload.split(",")
+    # We only expect application data from the relay.
+    if source != RELAY_ADDRESS:
+        print(f"[DROP] Unexpected LoRa source {source}")
+        return
 
-        if len(parts) >= 3:
-            latitude = parts[1]
-            longitude = parts[2]
+    parts = payload.split(",")
 
-            print("TYPE:          GPS")
-            print(f"LATITUDE:      {latitude}")
-            print(f"LONGITUDE:     {longitude}")
-        else:
-            print("TYPE:          GPS")
-            print(f"DATA:          {payload}")
+    if len(parts) < 4:
+        print(f"[DROP] Malformed packet: {payload}")
+        return
 
-    elif payload.startswith("SOS,"):
-        print("TYPE:          SOS")
-        print(f"DATA:          {payload}")
+    if parts[0] != PROTOCOL_VERSION:
+        print(f"[DROP] Unsupported protocol: {parts[0]}")
+        return
 
-    else:
-        print("TYPE:          UNKNOWN")
-        print(f"DATA:          {payload}")
+    packet_type = parts[1]
 
-    print(f"RSSI:          {rssi} dBm")
-    print(f"SNR:           {snr} dB")
-    print("STATUS:        PACKET RECEIVED")
-    print("=" * 45)
+    if packet_type not in ("GPS", "STATUS", "SOS"):
+        print(f"[DROP] Unknown packet type: {packet_type}")
+        return
 
+    try:
+        node_id = int(parts[2])
+        packet_id = int(parts[3])
+    except ValueError:
+        print("[DROP] Invalid node/packet ID")
+        return
+
+    if node_id <= 0 or packet_id <= 0:
+        print("[DROP] Invalid node/packet ID")
+        return
+
+    # ========================================================
+    # DUPLICATE
+    # ========================================================
+
+    if already_received(node_id, packet_id):
+
+        print(
+            f"[DUPLICATE] Node {node_id} "
+            f"Packet {packet_id}"
+        )
+
+        # VERY IMPORTANT:
+        # ACK duplicates again because the previous BACK
+        # may have been lost.
+        send_back(node_id, packet_id)
+
+        return
+
+    # ========================================================
+    # VALIDATE PACKET-SPECIFIC CONTENT BEFORE ACK
+    # ========================================================
+
+    if packet_type == "GPS":
+        if len(parts) != 7:
+            print("[DROP] Malformed GPS packet")
+            return
+
+        try:
+            latitude = float(parts[4])
+            longitude = float(parts[5])
+            satellites = int(parts[6])
+        except ValueError:
+            print("[DROP] Invalid GPS values")
+            return
+
+        if not (-90.0 <= latitude <= 90.0):
+            print("[DROP] Invalid latitude")
+            return
+
+        if not (-180.0 <= longitude <= 180.0):
+            print("[DROP] Invalid longitude")
+            return
+
+    elif packet_type == "STATUS":
+        if len(parts) < 5:
+            print("[DROP] Malformed STATUS packet")
+            return
+
+    elif packet_type == "SOS":
+        if len(parts) not in (5, 7):
+            print("[DROP] Malformed SOS packet")
+            return
+
+        if len(parts) == 7:
+            try:
+                latitude = float(parts[4])
+                longitude = float(parts[5])
+            except ValueError:
+                print("[DROP] Invalid SOS coordinates")
+                return
+
+            if not (-90.0 <= latitude <= 90.0):
+                print("[DROP] Invalid SOS latitude")
+                return
+
+            if not (-180.0 <= longitude <= 180.0):
+                print("[DROP] Invalid SOS longitude")
+                return
+
+    # ========================================================
+    # PACKET IS VALID
+    # ========================================================
+
+    remember_packet(node_id, packet_id)
+
+    print()
+    print("=" * 60)
+
+    print(
+        f"[{timestamp()}] "
+        f"Node {node_id} | Packet {packet_id}"
+    )
+
+    # ========================================================
+    # GPS
+    # ========================================================
+
+    if packet_type == "GPS":
+
+        latitude = float(parts[4])
+        longitude = float(parts[5])
+        satellites = int(parts[6])
+
+        print("TYPE       : GPS")
+        print(f"LATITUDE   : {latitude:.5f}")
+        print(f"LONGITUDE  : {longitude:.5f}")
+        print(f"SATELLITES : {satellites}")
+
+    # ========================================================
+    # STATUS
+    # ========================================================
+
+    elif packet_type == "STATUS":
+
+        status = parts[4]
+
+        print("TYPE       : STATUS")
+        print(f"STATUS     : {status}")
+
+        if status == "GPS_FIX" and len(parts) >= 6:
+            print(f"SATELLITES : {parts[5]}")
+
+    # ========================================================
+    # SOS
+    # ========================================================
+
+    elif packet_type == "SOS":
+
+        print()
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print("!!!            SOS ALERT             !!!")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+        if len(parts) == 5 and parts[4] == "NO_GPS":
+
+            print("GPS        : NO GPS FIX")
+
+        elif len(parts) == 7:
+
+            latitude = float(parts[4])
+            longitude = float(parts[5])
+            gps_status = parts[6]
+
+            print(f"LATITUDE   : {latitude:.5f}")
+            print(f"LONGITUDE  : {longitude:.5f}")
+            print(f"GPS STATUS : {gps_status}")
+
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print()
+
+    print("=" * 60)
+
+    # ========================================================
+    # ACKNOWLEDGE ONLY AFTER VALID PROCESSING
+    # ========================================================
+
+    send_back(node_id, packet_id)
+
+
+# ============================================================
+# MAIN
+# ============================================================
 
 def main():
-    print("PECRN Base Station")
-    print("-------------------")
-    print(f"Opening {SERIAL_PORT} at {BAUD_RATE} baud...")
+
+    global ser
+
+    print()
+    print("=" * 60)
+    print("PECRN BASE STATION")
+    print("Protocol: P1")
+    print(f"Serial: {SERIAL_PORT}")
+    print(f"Baud: {BAUD_RATE}")
+    print("Base LoRa Address: 2")
+    print("Relay LoRa Address: 0")
+    print("=" * 60)
+    print()
 
     try:
         ser = serial.Serial(
             SERIAL_PORT,
             BAUD_RATE,
-            timeout=1
+            timeout=0.1
         )
 
-    except serial.SerialException as error:
-        print("\nCould not open serial port.")
-        print(error)
-        print("\nUpdate SERIAL_PORT after connecting the CP2102.")
+    except serial.SerialException as e:
+
+        print("[ERROR] Could not open Base LoRa.")
+        print(e)
         return
 
-    time.sleep(2)
+    # Give USB serial a moment to settle.
+    time.sleep(0.5)
 
-    print("Connected.")
-    print("Waiting for LoRa packets...\n")
+    # Remove any old UART data.
+    ser.reset_input_buffer()
 
-    while True:
-        try:
-            line = ser.readline().decode(
+    print("[BASE] Serial connection opened.")
+    print("[BASE] Waiting for PECRN packets...")
+    print()
+    print("Press Control+C to stop.")
+    print()
+
+    try:
+
+        while True:
+
+            raw = ser.readline()
+
+            if not raw:
+                continue
+
+            line = raw.decode(
                 "utf-8",
-                errors="ignore"
+                errors="replace"
             ).strip()
 
             if not line:
                 continue
 
-            print(f"RAW: {line}")
+            # Ignore normal AT command confirmation.
+            if line == "+OK":
+                continue
 
-            packet = parse_packet(line)
+            if line.startswith("+ERR"):
+                print(f"[LORA ERROR] {line}")
+                continue
 
-            if packet is not None:
-                sender, payload, rssi, snr = packet
-                display_packet(
-                    sender,
-                    payload,
-                    rssi,
-                    snr
+            if not line.startswith("+RCV="):
+                print(f"[LORA] {line}")
+                continue
+
+            result = parse_rcv(line)
+
+            if result is None:
+                print(
+                    f"[ERROR] Could not parse: {line}"
                 )
+                continue
 
-        except KeyboardInterrupt:
-            print("\nBase station stopped.")
+            source, payload = result
+
+            print(
+                f"[RX] LoRa source {source}: {payload}"
+            )
+
+            process_packet(source, payload)
+
+    except KeyboardInterrupt:
+
+        print()
+        print("[BASE] Shutting down...")
+
+    finally:
+
+        if ser is not None and ser.is_open:
             ser.close()
-            break
+
+        print("[BASE] Serial port closed.")
 
 
 if __name__ == "__main__":
