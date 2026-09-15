@@ -1,8 +1,8 @@
 # Software
 
-This folder contains the firmware and test programs developed for the Portable Emergency Communication Relay Network.
+This folder contains the firmware and software developed for the Portable Emergency Communication Relay Network (PECRN).
 
-The software is organized by development stage so that each major hardware and communication feature can be tested independently before being integrated into the complete system.
+The software is organized by development stage, beginning with individual hardware tests and progressing to the complete three-node communication system.
 
 ## Software Structure
 
@@ -13,12 +13,14 @@ software/
 ├── 03_gps_oled/
 ├── 04_lora_verification/
 ├── 05_stm32_field_unit/
+├── 06_arduino_relay/
+├── 07_base_station/
 └── README.md
 ```
 
 ---
 
-## 01 - GPS Test
+# 01 - GPS Test
 
 ### Platform
 
@@ -54,7 +56,7 @@ Status: **Complete**
 
 ---
 
-## 02 - OLED Test
+# 02 - OLED Test
 
 ### Platform
 
@@ -75,17 +77,11 @@ Verify communication between the microcontroller and SSD1306 OLED display.
 
 The OLED successfully initialized and displayed test text.
 
-Example:
-
-```text
-HELLO
-```
-
 Status: **Complete**
 
 ---
 
-## 03 - GPS + OLED Integration
+# 03 - GPS + OLED Integration
 
 ### Platform
 
@@ -93,7 +89,7 @@ Arduino UNO R4 WiFi
 
 ### Purpose
 
-Combine the GPS and OLED subsystems into a standalone GPS display.
+Combine the GPS and OLED subsystems into a standalone GPS display before migration to the STM32 platform.
 
 ### Features
 
@@ -104,27 +100,17 @@ Combine the GPS and OLED subsystems into a standalone GPS display.
 - OLED status display
 - Real-time coordinate updates
 
-### Example Display
-
-```text
-GPS STATUS
-SAT: 6
-FIX: YES
-LAT: 47.xxxxxx
-LON: -122.xxxxxx
-```
-
 ### Result
 
 GPS information was successfully received, decoded, and displayed on the SSD1306 OLED.
 
-This milestone verified that the GPS and display subsystems could operate together before migration to the STM32 field unit.
+This milestone verified that the GPS and display subsystems could operate together.
 
 Status: **Complete**
 
 ---
 
-## 04 - LoRa Verification
+# 04 - LoRa Verification
 
 ### Platform
 
@@ -132,14 +118,14 @@ Arduino UNO R4 WiFi + RYLR998
 
 ### Purpose
 
-Verify UART communication with the RYLR998 LoRa transceiver before integrating LoRa communication into the STM32 field unit.
+Verify UART communication with the RYLR998 LoRa transceiver before integrating LoRa into the complete PECRN network.
 
 ### Features
 
 - RYLR998 UART communication
 - AT command interface
 - LoRa module configuration
-- Point-to-point communication testing
+- Point-to-point communication
 - Bidirectional communication testing
 
 ### Verified Configuration
@@ -153,9 +139,7 @@ PARAMETER=9,7,1,12
 
 ### Result
 
-The RYLR998 successfully responded to AT commands and communicated with another RYLR998 module.
-
-Point-to-point wireless communication was successfully verified.
+The RYLR998 successfully responded to AT commands and exchanged wireless packets with another RYLR998 module.
 
 Status: **Complete**
 
@@ -172,16 +156,15 @@ STM32 NUCLEO-F446RE
 - NEO-6M GPS
 - SSD1306 OLED
 - RYLR998 LoRa module
+- B1 SOS push button
 
 ### Purpose
 
-Integrate the GPS, OLED, and LoRa subsystems onto the STM32 NUCLEO-F446RE to create the first complete field unit.
+The STM32 Field Unit is the primary remote PECRN node.
 
-This represents the transition from isolated Arduino subsystem testing to the primary embedded platform for the field node.
+It collects GPS information, displays local status, generates telemetry and emergency packets, and reliably transmits those packets to the Arduino Relay Node.
 
----
-
-## STM32 Peripheral Configuration
+### Peripheral Configuration
 
 | Peripheral | Device | Configuration |
 |---|---|---|
@@ -189,6 +172,7 @@ This represents the transition from isolated Arduino subsystem testing to the pr
 | USART1 | RYLR998 LoRa | 115200 baud |
 | USART2 | PC / Debug | 115200 baud |
 | I2C1 | SSD1306 OLED | 100 kHz |
+| EXTI | B1 SOS Button | Falling-edge interrupt |
 
 ### Pin Assignment
 
@@ -203,183 +187,413 @@ SDA -> PB9 / I2C1_SDA
 LoRa
 RYLR998 TXD -> PA10 / USART1_RX
 RYLR998 RXD -> PA9  / USART1_TX
+
+SOS
+B1 -> PC13
 ```
+
+### Features
+
+- NMEA GGA parsing
+- GPS coordinate validation
+- GPS fix detection
+- GPS-loss detection
+- Last-known position storage
+- Periodic GPS telemetry
+- Periodic STATUS telemetry
+- SOS emergency packets
+- OLED status display
+- Packet ID generation
+- Reliable Field → Relay transmission
+- Relay acknowledgement (`RACK`)
+- Automatic retransmission
+- Interrupt-driven USART1 LoRa reception
+- Software UART ring buffer
+- SOS traffic priority
+
+### Packet Examples
+
+GPS:
+
+```text
+P1,GPS,1,286,47.66769,-122.31281,6
+```
+
+STATUS:
+
+```text
+P1,STATUS,1,285,GPS_FIX,6
+```
+
+SOS:
+
+```text
+P1,SOS,1,<packetID>,<latitude>,<longitude>,FIX
+```
+
+### Reliable Transmission
+
+After transmitting a packet, the Field Unit waits for:
+
+```text
+P1,RACK,1,<packetID>
+```
+
+from the Relay Node.
+
+If the expected RACK is not received, the Field Unit retries the packet.
+
+Current configuration:
+
+```text
+RACK timeout: 2000 ms
+Maximum attempts: 3
+Retry delay: 100 ms
+```
+
+Status: **Complete**
 
 ---
 
-## GPS Processing
+# 06 - Arduino Relay Node
 
-The NEO-6M continuously sends NMEA sentences to the STM32 through UART4.
+### Platform
 
-The STM32 collects incoming characters into a buffer and processes complete lines.
+Arduino UNO R4 WiFi + RYLR998
 
-The firmware searches for GPGGA messages because they contain the information required by the field unit, including:
+### Purpose
 
-- Latitude
-- Longitude
-- GPS fix status
-- Satellite count
+The Relay Node provides reliable intermediate storage and forwarding between the STM32 Field Unit and the Base Station.
+
+### Network Address
+
+```text
+Relay Address = 0
+Field Address = 1
+Base Address  = 2
+```
+
+### Features
+
+- Field packet reception
+- `RACK` acknowledgement to Field Node
+- Relay packet queue
+- 10-packet queue capacity
+- Strict FIFO forwarding for normal telemetry
+- SOS packet priority
+- Relay → Base retransmission
+- Base acknowledgement (`BACK`) handling
+- Retry backoff
+- Active duplicate detection
+- Completed-packet duplicate history
+- Queue-full protection
+- Radio TX pacing
+- Field traffic priority / quiet period
+
+### Field Acknowledgement
+
+After safely storing a Field packet, the Relay sends:
+
+```text
+P1,RACK,1,<packetID>
+```
+
+The Field Node can then consider the packet accepted by the relay.
+
+### Relay Queue
+
+Packets are retained by the Relay until successful delivery to the Base Station is confirmed.
+
+Normal GPS and STATUS telemetry follows FIFO ordering.
+
+SOS packets receive priority over ordinary telemetry.
+
+### Base Delivery
+
+The Relay forwards the original Field packet to Base Address `2`.
 
 Example:
 
 ```text
-$GPGGA,043520.00,4740.05797,N,12218.76981,W,1,07,1.82,79.7,M,-18.7,M,,*5A
+P1,GPS,1,286,47.66769,-122.31281,6
 ```
 
-The NMEA latitude and longitude values are converted into decimal degrees before being displayed or transmitted.
+The Relay then waits for:
+
+```text
+P1,BACK,1,286
+```
+
+If no BACK is received, transmission is retried.
+
+After repeated failures, the packet remains stored and is retried later using backoff rather than being discarded.
+
+Status: **Complete**
 
 ---
 
-## OLED Output
+# 07 - Base Station
 
-After acquiring a valid GPS fix, the STM32 updates the SSD1306 OLED.
+### Platform
+
+- macOS
+- Python 3
+- CP2102 USB-to-UART adapter
+- RYLR998 LoRa module
+
+### Purpose
+
+The Base Station is the final destination for PECRN telemetry.
+
+It receives packets forwarded by the Relay Node, parses and displays their contents, and acknowledges successful delivery.
+
+### Network Address
+
+```text
+Base Address  = 2
+Relay Address = 0
+Field Node    = 1
+```
+
+### Features
+
+- Serial communication with RYLR998
+- PECRN Protocol V1 parsing
+- GPS packet processing
+- STATUS packet processing
+- SOS packet processing
+- Packet ID display
+- GPS coordinate display
+- Satellite count display
+- Source-address validation
+- Base acknowledgement (`BACK`) transmission
+
+### Source Validation
+
+The Base Station may physically receive direct transmissions from the Field Node because all nodes share the LoRa network.
+
+Direct Field transmissions are intentionally ignored:
+
+```text
+[RX] LoRa source 1: P1,GPS,1,286,...
+[DROP] Unexpected LoRa source 1
+```
+
+Only packets forwarded by Relay Address `0` are processed:
+
+```text
+[RX] LoRa source 0: P1,GPS,1,286,47.66769,-122.31281,6
+```
+
+### Base Acknowledgement
+
+After successfully processing a packet, the Base Station sends:
+
+```text
+P1,BACK,<nodeID>,<packetID>
+```
 
 Example:
 
 ```text
-GPS FIX
-
-LAT 47.66768
-LON -122.31284
-SAT 9
+P1,BACK,1,286
 ```
 
-The OLED allows the field unit to operate independently without requiring a computer or Serial Monitor to view the current GPS status.
+The Relay uses this acknowledgement to determine that the packet reached its final destination and can be removed from the queue.
+
+Status: **Complete**
 
 ---
 
-## LoRa Transmission
+# PECRN Protocol V1
 
-After receiving and decoding a valid GPS position, the STM32 creates a LoRa payload.
-
-Example:
+The completed system uses a simple application-layer protocol identified by:
 
 ```text
-GPS,47.66776,-122.31289
+P1
 ```
 
-The firmware then generates an RYLR998 command:
+General packet format:
 
 ```text
-AT+SEND=0,23,GPS,47.66776,-122.31289
+P1,<TYPE>,<NODE_ID>,<PACKET_ID>,<DATA...>
 ```
 
-The command is transmitted from the STM32 to the RYLR998 through USART1.
-
-The LoRa module then sends the packet wirelessly.
-
----
-
-## Verified Wireless Output
-
-The Arduino relay-side RYLR998 successfully received GPS packets transmitted by the STM32 field unit.
-
-Example:
+### GPS
 
 ```text
-+RCV=1,23,GPS,47.66776,-122.31289,-31,11
-+RCV=1,23,GPS,47.66776,-122.31289,-41,11
-+RCV=1,23,GPS,47.66776,-122.31289,-39,11
-+RCV=1,23,GPS,47.66776,-122.31289,-35,11
-+RCV=1,23,GPS,47.66775,-122.31289,-35,10
+P1,GPS,1,<packetID>,<latitude>,<longitude>,<satellites>
 ```
 
-This verifies the complete data path:
+### STATUS
 
 ```text
-NEO-6M GPS
-     ↓
-STM32 UART4
-     ↓
-GPS Parser
-     ↓
-Latitude / Longitude
-     ├────────────► SSD1306 OLED
-     │
-     ▼
-LoRa Packet Generation
-     ↓
-STM32 USART1
-     ↓
-RYLR998 Field Unit
-     ↓
-915 MHz LoRa
-     ↓
-RYLR998 Receiver
-     ↓
-Arduino UNO R4 WiFi
-     ↓
-Serial Monitor
+P1,STATUS,1,<packetID>,<status>,...
+```
+
+### SOS
+
+```text
+P1,SOS,1,<packetID>,...
+```
+
+### Relay Acknowledgement
+
+```text
+P1,RACK,1,<packetID>
+```
+
+### Base Acknowledgement
+
+```text
+P1,BACK,1,<packetID>
 ```
 
 ---
 
-## Current STM32 Field Unit Features
+# Reliable Delivery Architecture
 
-- [x] STM32 peripheral configuration
-- [x] GPS UART communication
-- [x] NMEA message reception
-- [x] GPGGA parsing
-- [x] GPS fix detection
-- [x] Latitude conversion
-- [x] Longitude conversion
-- [x] Satellite count extraction
-- [x] SSD1306 I2C communication
-- [x] GPS information displayed on OLED
-- [x] RYLR998 UART communication
-- [x] LoRa AT command generation
-- [x] GPS payload generation
-- [x] GPS coordinate transmission over LoRa
-- [x] Wireless GPS packet reception verified
-- [ ] Relay packet forwarding
-- [ ] Multi-hop routing
-- [ ] Emergency SOS packet
-- [ ] Duplicate packet detection
-- [ ] Battery operation
+PECRN uses acknowledgements at both communication hops.
 
-Status: **Complete for Milestone 4**
+```text
+             GPS / STATUS / SOS
+STM32 FIELD ─────────────────────► RELAY
+    ▲                                │
+    │            RACK                │
+    └────────────────────────────────┘
+                                     │
+                                     │ GPS / STATUS / SOS
+                                     ▼
+                                  BASE STATION
+                                     │
+                                     │ BACK
+                                     ▼
+                                   RELAY
+```
+
+### Stage 1 — Field → Relay
+
+1. Field generates a packet with a unique packet ID.
+2. Field transmits the packet to Relay Address `0`.
+3. Relay validates and stores the packet.
+4. Relay sends `RACK`.
+5. Field retries if RACK is not received.
+
+### Stage 2 — Relay → Base
+
+1. Relay selects a queued packet.
+2. Relay forwards it to Base Address `2`.
+3. Base validates and processes the packet.
+4. Base sends `BACK`.
+5. Relay removes the packet after BACK is received.
+6. If BACK is missing, Relay retries and eventually applies retry backoff.
 
 ---
 
-# Current Software Architecture
+# Completed System Architecture
 
 ```text
-FIELD UNIT
-STM32 NUCLEO-F446RE
+                     PECRN
 
-GPS Input
-   │
-   ▼
-UART4 Driver
-   │
-   ▼
-NMEA Buffer
-   │
-   ▼
-GPGGA Parser
-   │
-   ├──────────────► OLED Display
-   │
-   ▼
-GPS Payload
-   │
-   ▼
-LoRa AT Command
-   │
-   ▼
-USART1
-   │
-   ▼
-RYLR998
-   │
-   │ Wireless
-   ▼
-RELAY NODE
-Arduino UNO R4 WiFi
-   │
-   ▼
-RYLR998 Receiver
+               STM32 FIELD NODE
+              NUCLEO-F446RE
+                     │
+          ┌──────────┼──────────┐
+          │          │          │
+         GPS        OLED       SOS
+        UART4       I2C1       EXTI
+          │          │          │
+          └──────────┼──────────┘
+                     │
+              Packet Generation
+                     │
+             GPS / STATUS / SOS
+                     │
+                  USART1
+                     │
+                 RYLR998
+                     │
+                     │ LoRa
+                     ▼
+              ARDUINO RELAY
+                Address 0
+                     │
+              Queue + RACK
+                     │
+              Retry / Backoff
+                     │
+                 RYLR998
+                     │
+                     │ LoRa
+                     ▼
+               BASE STATION
+                 Address 2
+                     │
+              Python Software
+                     │
+              Packet Display
+                     │
+                  BACK
+                     │
+                     ▼
+              ARDUINO RELAY
 ```
+
+---
+
+# Verified End-to-End Operation
+
+The complete three-node communication chain has been tested successfully.
+
+Example Field telemetry:
+
+```text
+P1,GPS,1,286,47.66769,-122.31281,6
+```
+
+The Base Station received the forwarded packet from Relay Address `0`:
+
+```text
+[RX] LoRa source 0: P1,GPS,1,286,47.66769,-122.31281,6
+```
+
+The Base Station decoded the telemetry:
+
+```text
+Node 1 | Packet 286
+TYPE       : GPS
+LATITUDE   : 47.66769
+LONGITUDE  : -122.31281
+SATELLITES : 6
+```
+
+and returned:
+
+```text
+[BACK -> RELAY] P1,BACK,1,286
+```
+
+This verifies the complete communication path:
+
+```text
+GPS
+ ↓
+STM32 Field Node
+ ↓
+LoRa
+ ↓
+Arduino Relay
+ ↓
+LoRa
+ ↓
+Base Station
+ ↓
+BACK
+ ↓
+Arduino Relay
+```
+
+Status: **End-to-End Communication Verified**
 
 ---
 
@@ -391,43 +605,34 @@ RYLR998 Receiver
 | 02 | OLED display test | Complete |
 | 03 | GPS + OLED integration | Complete |
 | 04 | RYLR998 LoRa verification | Complete |
-| 05 | STM32 field unit integration | Complete |
-| 06 | Three-node relay firmware | Next |
-| 07 | Emergency message protocol | Planned |
-| 08 | Battery deployment firmware | Planned |
+| 05 | STM32 Field Unit | Complete |
+| 06 | Arduino Relay Node | Complete |
+| 07 | Python Base Station | Complete |
+| 08 | End-to-end acknowledgement protocol | Complete |
+| 09 | Relay queue and retry system | Complete |
+| 10 | SOS priority | Complete |
+| 11 | Battery / portable deployment | Future |
 
 ---
 
-# Next Development Stage
+# Current Status
 
-The next software stage is the three-node relay network.
+The core PECRN communication system is operational.
 
-The target architecture is:
+The current implementation provides:
 
-```text
-Node 1
-STM32 FIELD UNIT
-GPS + OLED + LoRa
-       │
-       │ GPS packet
-       ▼
-Node 2
-ARDUINO RELAY
-LoRa
-       │
-       │ Forwarded packet
-       ▼
-Node 3
-BASE STATION
-LoRa + PC
-```
+- GPS telemetry
+- System status telemetry
+- Emergency SOS messaging
+- Three-node LoRa communication
+- Field-to-Relay acknowledgements
+- Relay-to-Base acknowledgements
+- Packet retransmission
+- Relay packet buffering
+- Duplicate detection
+- FIFO telemetry delivery
+- SOS priority
+- GPS validation
+- Local OLED status display
 
-The relay firmware will need to:
-
-1. Receive a LoRa packet from the field unit.
-2. Identify the sender and packet contents.
-3. Extract the GPS payload.
-4. Forward the packet to the base station.
-5. Prevent unnecessary packet retransmission.
-
-This will create the project's first multi-hop communication path.
+The next stage of development can focus on portable power, enclosure design, expanded field testing, and additional field or relay nodes.
